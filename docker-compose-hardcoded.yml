@@ -1,0 +1,52 @@
+# docker-compose-hardcoded.yml — Sara Service Backend (VERSIÓN QUEMADA - Sin variables)
+# Ubicación en servidor: /var/docker/siimies/sara/docker-compose.yml
+# ADVERTENCIA: Contraseñas visibles en este archivo. Para producción usar versión con .env
+
+version: '3.9'
+
+services:
+
+  # ==================== INSTANCIA 1 ====================
+  sara-service-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mies/sara-service:latest
+    container_name: sara-service-1
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8083
+
+      # Base de datos — SQL Server JTDS (QUEMADO)
+      SPRING_DATASOURCE_URL: "jdbc:jtds:sqlserver://192.168.95.43:1433/MiesData;instance=SIIMIESBD;ssl=off;useNTLMv2=false"
+      SPRING_DATASOURCE_USERNAME: "appsiimies"
+      SPRING_DATASOURCE_PASSWORD: "Mie$2@16"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "net.sourceforge.jtds.jdbc.Driver"
+
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
+      SPRING_JPA_SHOW_SQL: "false"
+
+      JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseG1GC"
+
+      # Logging
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_EC_GOB_MDH_SARA: DEBUG
+
+    volumes:
+      - /mnt/sara-storage/logs:/app/logs
+
+    restart: unless-stopped
+    networks:
+      - sara-backend-network
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  sara-backend-network:
+    driver: bridge

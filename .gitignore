@@ -1,0 +1,6 @@
+﻿
+# ONNX models - too large, load from resources at runtime
+src/main/resources/models/*.onnx
+ 
+target/ 
+*.onnx 

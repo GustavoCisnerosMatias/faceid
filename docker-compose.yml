@@ -1,0 +1,240 @@
+version: '3.9'
+
+# ════════════════════════════════════════════════════════════════════════════════
+# Docker Compose - SIIMIES Sara Service
+# Servicios: Sara-Service (multi-instancia) + SQL Server + Monitoring
+# Basado en patrón de adopciones/back
+# ════════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # SARA SERVICE - INSTANCIA 1
+  # ═══════════════════════════════════════════════════════════════════════════════
+  sara-service-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mies/sara-service:latest
+    container_name: sara-service-1
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8083
+      JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseG1GC"
+      
+      # ── Base de Datos SQL Server ──
+      SPRING_DATASOURCE_URL: "jdbc:jtds:sqlserver://${DB_HOST:-mies-sqlserver}:${DB_PORT:-1433}/${DB_NAME:-MiesData};instance=${DB_INSTANCE:-SIIMIESBD};ssl=off;useNTLMv2=false"
+      SPRING_DATASOURCE_USERNAME: "${DB_USER:-appsiimies}"
+      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD:-Mie$2@16}"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "net.sourceforge.jtds.jdbc.Driver"
+      
+      # ── JPA/Hibernate ──
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
+      SPRING_JPA_SHOW_SQL: "false"
+      
+      # ── Logging ──
+      LOGGING_LEVEL_ROOT: "${LOGGING_LEVEL_ROOT:-INFO}"
+      LOGGING_LEVEL_EC_GOB_MDH_SARA: "${LOGGING_LEVEL_EC_GOB_MDH_SARA:-DEBUG}"
+    
+    depends_on:
+      mies-sqlserver:
+        condition: service_healthy
+    
+    networks:
+      - sara-network
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    volumes:
+      - sara-logs-1:/app/logs
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # SARA SERVICE - INSTANCIA 2 (Opcional)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  sara-service-2:
+    image: mies/sara-service:latest
+    container_name: sara-service-2
+    ports:
+      - "8084:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8083
+      JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseG1GC"
+      
+      SPRING_DATASOURCE_URL: "jdbc:jtds:sqlserver://${DB_HOST:-mies-sqlserver}:${DB_PORT:-1433}/${DB_NAME:-MiesData};instance=${DB_INSTANCE:-SIIMIESBD};ssl=off;useNTLMv2=false"
+      SPRING_DATASOURCE_USERNAME: "${DB_USER:-appsiimies}"
+      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD:-Mie$2@16}"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "net.sourceforge.jtds.jdbc.Driver"
+      
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
+      SPRING_JPA_SHOW_SQL: "false"
+      
+      LOGGING_LEVEL_ROOT: "${LOGGING_LEVEL_ROOT:-INFO}"
+      LOGGING_LEVEL_EC_GOB_MDH_SARA: "${LOGGING_LEVEL_EC_GOB_MDH_SARA:-DEBUG}"
+    
+    depends_on:
+      mies-sqlserver:
+        condition: service_healthy
+    
+    networks:
+      - sara-network
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    volumes:
+      - sara-logs-2:/app/logs
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # SARA SERVICE - INSTANCIA 3 (Opcional)
+  # ═══════════════════════════════════════════════════════════════════════════════
+  sara-service-3:
+    image: mies/sara-service:latest
+    container_name: sara-service-3
+    ports:
+      - "8085:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8083
+      JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseG1GC"
+      
+      SPRING_DATASOURCE_URL: "jdbc:jtds:sqlserver://${DB_HOST:-mies-sqlserver}:${DB_PORT:-1433}/${DB_NAME:-MiesData};instance=${DB_INSTANCE:-SIIMIESBD};ssl=off;useNTLMv2=false"
+      SPRING_DATASOURCE_USERNAME: "${DB_USER:-appsiimies}"
+      SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD:-Mie$2@16}"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "net.sourceforge.jtds.jdbc.Driver"
+      
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
+      SPRING_JPA_SHOW_SQL: "false"
+      
+      LOGGING_LEVEL_ROOT: "${LOGGING_LEVEL_ROOT:-INFO}"
+      LOGGING_LEVEL_EC_GOB_MDH_SARA: "${LOGGING_LEVEL_EC_GOB_MDH_SARA:-DEBUG}"
+    
+    depends_on:
+      mies-sqlserver:
+        condition: service_healthy
+    
+    networks:
+      - sara-network
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    volumes:
+      - sara-logs-3:/app/logs
+
+  
+  # ─────────────────────────────────────────────────────────────────────────────
+  # SQL Server 2019 (Desarrollo local)
+  # ⚠️ EN PRODUCCIÓN: Conectar a servidor real (192.168.95.43)
+  # ─────────────────────────────────────────────────────────────────────────────
+  mies-sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: mies-sqlserver-dev
+    environment:
+      SA_PASSWORD: "MiesData2024!"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+    
+    ports:
+      - "1433:1433"
+    
+    networks:
+      - sara-network
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: [
+        "CMD",
+        "/opt/mssql-tools/bin/sqlcmd",
+        "-S", "localhost",
+        "-U", "sa",
+        "-P", "MiesData2024!",
+        "-Q", "SELECT 1"
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    volumes:
+      - mies-sqlserver-data:/var/opt/mssql/data
+  
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Prometheus - Métricas (Opcional)
+  # ─────────────────────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sara-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    networks:
+      - sara-network
+    restart: unless-stopped
+  
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Grafana - Visualización de Métricas (Opcional)
+  # ─────────────────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sara-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: "grafana-piechart-panel"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - sara-network
+    restart: unless-stopped
+
+# ════════════════════════════════════════════════════════════════════════════════
+# Volumenes Persistentes
+# ════════════════════════════════════════════════════════════════════════════════
+volumes:
+  mies-sqlserver-data:
+    driver: local
+  sara-logs-1:
+    driver: local
+  sara-logs-2:
+    driver: local
+  sara-logs-3:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+# ════════════════════════════════════════════════════════════════════════════════
+# Red personalizada para comunicación entre contenedores
+# ════════════════════════════════════════════════════════════════════════════════
+networks:
+  sara-network:
+    driver: bridge

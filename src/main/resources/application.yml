@@ -1,0 +1,20 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: face-compare-service
+
+facenet:
+  yunet-path: classpath:models/face_detection_yunet_2023mar.onnx
+  sface-path: classpath:models/face_recognition_sface_2021dec.onnx
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    ec.gob.mdh.sara: INFO

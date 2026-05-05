@@ -1,0 +1,104 @@
+spring:
+  application:
+    name: sara-service
+  
+  # ─── Base de Datos - Configuración Docker ──────────────────────────────────
+  datasource:
+    # Usar variable de entorno o conectar a contenedor mies-sqlserver
+    url: jdbc:jtds:sqlserver://${DB_HOST:mies-sqlserver}:${DB_PORT:1433}/${DB_NAME:MiesData};instance=${DB_INSTANCE:SIIMIESBD};ssl=off;useNTLMv2=false;
+    username: ${DB_USER:appsiimies}
+    password: ${DB_PASSWORD:Mie$2@16}
+    driver-class-name: net.sourceforge.jtds.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 60000
+      idle-timeout: 900000
+      max-lifetime: 1800000
+      validation-timeout: 10000
+      connection-test-query: SELECT 1
+
+  # ─── JPA / Hibernate ─────────────────────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+          fetch_size: 50
+        connection:
+          network_timeout: 10000
+        temp:
+          use_jdbc_metadata_defaults: false
+        enable_lazy_load_no_trans: true
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    open-in-view: false
+    defer-datasource-initialization: true
+
+  # ─── Server Configuration ───────────────────────────────────────────────────
+  servlet:
+    context-path: /
+
+server:
+  port: ${SERVER_PORT:8083}
+  servlet:
+    context-path: /
+  shutdown: graceful
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# ── Actuator Health Checks ──────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info,env,threaddump
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+# ── Logging ──────────────────────────────────────────────────────────────────────
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    ec.gob.mdh.sara: ${LOGGING_LEVEL_EC_GOB_MDH_SARA:DEBUG}
+    org.hibernate.SQL: DEBUG
+    org.springframework.jdbc: DEBUG
+    com.zaxxer.hikari: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/sara-service.log
+    max-size: 10MB
+    max-history: 10
+
+# ── Información de Aplicación ───────────────────────────────────────────────────
+app:
+  name: sara-service
+  version: 1.0.0
+  description: Microservicio de Asistencia y Reconocimiento Facial con FaceNet
+  environment: docker
+
+# ── Swagger/OpenAPI ──────────────────────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
