@@ -1,4 +1,4 @@
-package ec.gob.mdh.sara.dto;
+package com.facecompare.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class FaceTestRequest {
+public class CompareRequest {
 
     @NotBlank(message = "imagen1 es requerida")
     private String imagen1;

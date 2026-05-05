@@ -1,12 +1,12 @@
-package ec.gob.mdh.sara;
+package com.facecompare;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SaraServiceApplication {
+public class FaceCompareApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SaraServiceApplication.class, args);
+        SpringApplication.run(FaceCompareApplication.class, args);
     }
 }
