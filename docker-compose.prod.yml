@@ -1,0 +1,70 @@
+# docker-compose.prod.yml — Sara Service Backend (ENTORNO PRODUCCIÓN)
+# DB: 192.168.95.4 | Instancias: 3 | Perfil: production
+# Ubicación en servidor: /var/docker/siimies/sara/docker-compose.prod.yml
+# Uso: docker compose -f docker-compose.prod.yml up -d
+
+version: '3.9'
+
+x-sara-base: &sara-base
+  build:
+    context: .
+    dockerfile: Dockerfile.prod
+  image: mies/sara-service:prod
+  environment:
+    SPRING_PROFILES_ACTIVE: production
+    SPRING_DATASOURCE_URL: "jdbc:jtds:sqlserver://192.168.95.4:1433/MiesData;instance=SIIMIESBD;ssl=off;useNTLMv2=false"
+    SPRING_DATASOURCE_USERNAME: "appsiimies"
+    SPRING_DATASOURCE_PASSWORD: "Mie$2@16"
+    SPRING_DATASOURCE_DRIVER_CLASS_NAME: "net.sourceforge.jtds.jdbc.Driver"
+    SPRING_JPA_HIBERNATE_DDL_AUTO: "none"
+    SPRING_JPA_SHOW_SQL: "false"
+    JAVA_OPTS: "-Xmx768m -Xms384m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+    LOGGING_LEVEL_ROOT: WARN
+    LOGGING_LEVEL_EC_GOB_MDH_SARA: INFO
+  volumes:
+    - /mnt/sara-storage/logs:/app/logs
+  restart: unless-stopped
+  networks:
+    - sara-backend-network
+  healthcheck:
+    test: ["CMD", "curl", "-sf", "http://localhost:8083/actuator/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 60s
+
+services:
+
+  # ==================== INSTANCIA 1 ====================
+  sara-service-1:
+    <<: *sara-base
+    container_name: sara-service-1
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *sara-base
+      SERVER_PORT: 8083
+
+  # ==================== INSTANCIA 2 ====================
+  sara-service-2:
+    <<: *sara-base
+    container_name: sara-service-2
+    ports:
+      - "8084:8083"
+    environment:
+      <<: *sara-base
+      SERVER_PORT: 8083
+
+  # ==================== INSTANCIA 3 ====================
+  sara-service-3:
+    <<: *sara-base
+    container_name: sara-service-3
+    ports:
+      - "8085:8083"
+    environment:
+      <<: *sara-base
+      SERVER_PORT: 8083
+
+networks:
+  sara-backend-network:
+    driver: bridge
